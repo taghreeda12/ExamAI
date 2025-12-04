@@ -1,121 +1,3 @@
-# import cv2
-# import dlib
-# import threading
-# import time
-# from pynput import keyboard, mouse
-# import numpy as np
-# from scipy.spatial import distance
-
-# detector = dlib.get_frontal_face_detector()
-# predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
-# #predictor = dlib.shape_predictor('/Users/taghridamohamed/TagProP.py/shape_predictor_68_face_landmarks.dat')
-
-# def eye_aspect_ratio(eye):
-#     A = distance.euclidean(eye[1], eye[5])
-#     B = distance.euclidean(eye[2], eye[4])
-#     C = distance.euclidean(eye[0], eye[3])
-#     return (A + B) / (2.0 * C)
-
-# # إعداد الكاميرا
-# cap = cv2.VideoCapture(1)
-
-# # معايير التحذير
-# EAR_THRESHOLD = 0.25
-# FRAME_COUNT_THRESHOLD = 20
-# frame_count = 0
-# warned = False
-
-# # وظيفة للكشف عن الوجوه باستخدام dlib
-# def detect_faces_with_dlib(frame):
-#     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#     faces = detector(gray)
-#     return faces
-
-# # وظيفة للتسجيل في ملف
-# def log_event(text):
-#     with open("activity_log.txt", "a", encoding="utf-8") as file:
-#         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-#         file.write(f"[{timestamp}] {text}\n")
-
-# # التعامل مع ضغط المفاتيح
-# def on_key_press(key):
-#     try:
-#         log_event(f"Key: {key.char}")
-#     except AttributeError:
-#         log_event(f"Special Key: {key}")
-#     if key == keyboard.Key.esc:
-#         #stop_flag.set()
-#         return False
-
-# def on_mouse_move(x, y):
-#     log_event(f"Mouse moved to ({x}, {y})")
-
-# def on_mouse_click(x, y, button, pressed):
-#     action = "Pressed" if pressed else "Released"
-#     log_event(f"Mouse {action} {button} at ({x}, {y})")
-
-# def on_mouse_scroll(x, y, dx, dy):
-#     log_event(f"Mouse scroll at ({x}, {y}) by ({dx}, {dy})")
-
-# def video_loop():
-#     global frame_count, warned
-#     cap = cv2.VideoCapture(1)
-#     while True:
-#         ret, frame = cap.read()
-#         if not ret:
-#             break
-
-#         faces = detect_faces_with_dlib(frame)
-
-#         for face in faces:
-#             landmarks = predictor(frame, face)
-#             left_eye = [(landmarks.part(i).x, landmarks.part(i).y) for i in range(36, 42)]
-#             right_eye = [(landmarks.part(i).x, landmarks.part(i).y) for i in range(42, 48)]
-
-#             left_ear = eye_aspect_ratio(left_eye)
-#             right_ear = eye_aspect_ratio(right_eye)
-
-#             ear = (left_ear + right_ear) / 2.0
-
-#             if ear < EAR_THRESHOLD:
-#                 frame_count += 1
-#                 if frame_count >= FRAME_COUNT_THRESHOLD and not warned:
-#                     cv2.putText(frame, "تحذير: العين مغلقة لفترة طويلة!", (50, 50),
-#                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-#                     warned = True
-#             else:
-#                 frame_count = 0
-#                 warned = False
-
-#             x, y, w, h = (face.left(), face.top(), face.width(), face.height())
-#             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-
-#         cv2.imshow("Face Detection", frame)
-
-#         if cv2.waitKey(1) & 0xFF == ord('q'):
-#             break
-
-#     cap.release()
-#     cv2.destroyAllWindows()
-
-# def start_listeners():
-#     kb_listener = keyboard.Listener(on_press=on_key_press)
-#     ms_listener = mouse.Listener(
-#         on_move=on_mouse_move,
-#         on_click=on_mouse_click,
-#         on_scroll=on_mouse_scroll
-#     )
-#     kb_listener.start()
-#     ms_listener.start()
-
-# def run():
-#     # threading.Thread(target=video_loop, daemon=True).start()
-#     # start_listeners()
-#     video_loop()
-
-# if __name__ == "__main__":
-#     run()
-
 import cv2
 import dlib
 import threading
@@ -124,47 +6,48 @@ from pynput import keyboard, mouse
 import numpy as np
 from scipy.spatial import distance
 
+# Dlib face detector and landmark predictor
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
-#predictor = dlib.shape_predictor('/Users/taghridamohamed/TagProP.py/shape_predictor_68_face_landmarks.dat')
 
+# Eye aspect ratio calculation
 def eye_aspect_ratio(eye):
     A = distance.euclidean(eye[1], eye[5])
     B = distance.euclidean(eye[2], eye[4])
     C = distance.euclidean(eye[0], eye[3])
     return (A + B) / (2.0 * C)
 
-# إعداد الكاميرا
+# Camera setup
 cap = cv2.VideoCapture(0)
 
-# معايير التحذير
+# Warning thresholds
 EAR_THRESHOLD = 0.25
 FRAME_COUNT_THRESHOLD = 20
 frame_count = 0
 warned = False
 
-# وظيفة للكشف عن الوجوه باستخدام dlib
-def detect_faces_with_dlib(frame):
+# Face detection function
+def detect_faces(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
     return faces
 
-# وظيفة للتسجيل في ملف
-def log_event(text):
+# Logging function
+def log_event(message):
     with open("activity_log.txt", "a", encoding="utf-8") as file:
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        file.write(f"[{timestamp}] {text}\n")
+        file.write(f"[{timestamp}] {message}\n")
 
-# التعامل مع ضغط المفاتيح
+# Keyboard event handling
 def on_key_press(key):
     try:
-        log_event(f"Key: {key.char}")
+        log_event(f"Key pressed: {key.char}")
     except AttributeError:
-        log_event(f"Special Key: {key}")
+        log_event(f"Special key pressed: {key}")
     if key == keyboard.Key.esc:
-        #stop_flag.set()
-        return False
+        return False  # Stop listener
 
+# Mouse event handling
 def on_mouse_move(x, y):
     log_event(f"Mouse moved to ({x}, {y})")
 
@@ -173,38 +56,28 @@ def on_mouse_click(x, y, button, pressed):
     log_event(f"Mouse {action} {button} at ({x}, {y})")
 
 def on_mouse_scroll(x, y, dx, dy):
-    log_event(f"Mouse scroll at ({x}, {y}) by ({dx}, {dy})")
+    log_event(f"Mouse scrolled at ({x}, {y}) by ({dx}, {dy})")
 
-# def take_snapshot():
-#     video_capture = cv2.VideoCapture(0)  # استخدم 0 أو 1 حسب الكاميرا المتوفرة
-
-#     ret, frame = video_capture.read()
-#     video_capture.release()
-
-#     if ret:
-#         cv2.imwrite("snapshot.jpg", frame)
-#         print("✅ تم حفظ الصورة باسم snapshot.jpg")
-#     else:
-#         print("❌ لم يتم التقاط صورة")
-
+# Take snapshots periodically
 def take_snapshot_periodically():
     while True:
-        video_capture = cv2.VideoCapture(0)  # Use the correct camera index
-        ret, frame = video_capture.read()
-        video_capture.release()
+        capture = cv2.VideoCapture(0)
+        ret, frame = capture.read()
+        capture.release()
 
         if ret:
             timestamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
             filename = f"snapshot_{timestamp}.jpg"
             cv2.imwrite(filename, frame)
-            print(f"✅ تم حفظ الصورة باسم {filename}")
+            print(f"Snapshot saved: {filename}")
             log_event(f"Snapshot taken: {filename}")
         else:
-            print("❌ لم يتم التقاط صورة")
+            print("Snapshot failed")
             log_event("Snapshot failed")
 
-        time.sleep(20)  # Wait for 20 seconds
+        time.sleep(20)  # Every 20 seconds
 
+# Main video loop
 def video_loop():
     global frame_count, warned
     cap = cv2.VideoCapture(0)
@@ -213,7 +86,7 @@ def video_loop():
         if not ret:
             break
 
-        faces = detect_faces_with_dlib(frame)
+        faces = detect_faces(frame)
 
         for face in faces:
             landmarks = predictor(frame, face)
@@ -222,13 +95,12 @@ def video_loop():
 
             left_ear = eye_aspect_ratio(left_eye)
             right_ear = eye_aspect_ratio(right_eye)
-
             ear = (left_ear + right_ear) / 2.0
 
             if ear < EAR_THRESHOLD:
                 frame_count += 1
                 if frame_count >= FRAME_COUNT_THRESHOLD and not warned:
-                    cv2.putText(frame, "تحذير: العين مغلقة لفترة طويلة!", (50, 50),
+                    cv2.putText(frame, "Warning: Eyes closed for too long!", (50, 50),
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                     warned = True
             else:
@@ -246,6 +118,7 @@ def video_loop():
     cap.release()
     cv2.destroyAllWindows()
 
+# Start keyboard and mouse listeners
 def start_listeners():
     kb_listener = keyboard.Listener(on_press=on_key_press)
     ms_listener = mouse.Listener(
@@ -256,6 +129,7 @@ def start_listeners():
     kb_listener.start()
     ms_listener.start()
 
+# Run all monitoring tasks
 def run():
     threading.Thread(target=video_loop, daemon=True).start()
     threading.Thread(target=take_snapshot_periodically, daemon=True).start()
